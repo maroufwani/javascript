@@ -1,7 +1,9 @@
+const userDao = require('../dao/userDao');
+const bcrypt = require('bcryptjs')
 const users = require('../dao/userDB');
 
 const authController = {
-    login: (req,res)=>{
+    login: async (req,res)=>{
         
     const {email,password} = req.body;
     if(!email || !password){
@@ -9,51 +11,53 @@ const authController = {
             message: "Please enter email and password"
         })
     }
-    const user = users.find(u=>u.email==email&&u.password==password)
-    if (!user){
+
+    const user = await userDao.findByEmail(email);
+    const isMatch = await bcrypt.compare(password,user.password)
+    if (user && isMatch){
+        res.status(200).json({
+            message: `Welcome back, ${user.name}`,
+            user: user
+        })
+    }
+    else{
         return res.status(400).json({
             message: "Invalid email or password"
         })
     }
-    else{
-        res.status(200).json({
-            message: `Welcome back, ${user.username}`
-        })
-    }
 
     },
-    register: (req,res)=>{
+    register: async (req,res)=>{
         
-    const { username, email, password } = req.body;
+        const { name, email, password } = req.body;
 
-    if (!username || !email || !password) {
-        return res.status(400).json({ 
-            message: 'Please provide username, email, and password' 
-        });
-    }
+        if (!name || !email || !password) {
+            return res.status(400).json({ 
+                message: 'Please provide name, email, and password' 
+            });
+        }
 
-    const existingUser = users.find(u => u.email === email);
-    if (existingUser) {
-        return res.status(400).json({ 
-            message: `user already exists with email: ${email}` 
-        });
-    }
-    const newUser = {
-        id: users.length+1,
-        username: username,
-        email: email,
-        password: password
-    }
-    users.push(newUser);
+        try {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password,salt);
+            const user = await userDao.create({
+                name: name,
+                email: email,
+                password: hashedPassword
+            });
 
-    console.log('New user registration:', { username, email });
-    console.log('All users:', users);
-
-    res.status(201).json({ 
-        message: 'User registered successfully',
-        user: { id: newUser.id, username, email }
-    });
-
+            res.status(201).json({ 
+                message: 'User registered successfully',
+                user: { id: user._id,}
+            });
+        } catch (err) {
+            if(err.code === 'USER_EXIST'){
+                res.status(400).json({
+                    message: 'User with the email already exists'
+                })
+            }
+            return res.status(500).json({ message: 'Internal server error' });
+        }
     }
 };
 
