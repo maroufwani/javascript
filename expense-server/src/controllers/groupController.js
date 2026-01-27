@@ -24,7 +24,7 @@ const groupController = {
                 groupId: newGroup._id
             })
         }
-        catch{err}{
+        catch(err){
             console.log(err);
             res.status(500).json({
                 message: "Internal Server Error"
@@ -32,3 +32,5 @@ const groupController = {
         }
     }
 }
+
+module.exports = groupController;
