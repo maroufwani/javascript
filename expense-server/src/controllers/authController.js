@@ -1,6 +1,6 @@
 const userDao = require('../dao/userDao');
 const bcrypt = require('bcryptjs')
-const users = require('../dao/userDB');
+const jwt = require('jsonwebtoken')
 
 const authController = {
     login: async (req,res)=>{
@@ -15,10 +15,21 @@ const authController = {
     const user = await userDao.findByEmail(email);
     const isMatch = await bcrypt.compare(password,user.password)
     if (user && isMatch){
+        const token = jwt.sign({
+            name:user.name,
+            email: user.email,
+            id: user._id
+        }, process.env.JWT_SECRET, {expiresIn: '1h'});
+        res.cookie('jwtTOken', token, {
+            httpOnly: true,
+            secure: true,
+            domain: 'localhost',
+            path: '/'
+        });
         res.status(200).json({
             message: `Welcome back, ${user.name}`,
             user: user
-        })
+        });
     }
     else{
         return res.status(400).json({

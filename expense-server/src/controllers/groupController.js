@@ -3,7 +3,8 @@ const groupDao = require("../dao/groupDao");
 const groupController = {
     create: async (req,res)=>{
         try {
-            const {name, description, adminEmail,membersEmail,thumbnail} = req.body;
+            const user = req.user;
+            const {name, description, membersEmail,thumbnail} = req.body;
 
             let allMembers = [adminEmail];
             if(membersEmail && Array.isArray(membersEmail)){
@@ -11,7 +12,7 @@ const groupController = {
             }
 
             const newGroup = await groupDao.createGroup({
-                name,description,adminEmail,allMembers,thumbnail,paymentStatus: {
+                name,description,adminEmail:user.email,allMembers,thumbnail,paymentStatus: {
                     amount: 0,
                     currency: 'INR',
                     date: Date.now(),
