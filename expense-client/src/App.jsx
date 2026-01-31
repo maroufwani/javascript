@@ -13,14 +13,35 @@
 //   )
 // }
 
-import Navbar from "./components/Navbar"
-import Form from "./components/Form"
+// import Navbar from "./components/Navbar"
+// import Form from "./components/Form"
+
+
+
+
+
+
+
+import { Route, Routes } from "react-router-dom"
+import Home from "./pages/Home"
+import Login from "./pages/Login"
+import Signup from "./pages/Signup"
+import Dashboard from "./pages/Dashboard"
+import AppLayout from "./components/AppLayout"
+import ProtectedRoute from "./components/ProtectedRoute"
+
 function App() {
   return (
-    <>
-    <Navbar/>
-    <Form/>
-    </>
+    <Routes>
+      <Route path="/" element={<AppLayout><Home/></AppLayout>}/>
+      <Route path="/signup" element={<AppLayout><Signup/></AppLayout>}/>
+      <Route path="/login" element={<AppLayout><Login/></AppLayout>}/>
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <AppLayout><Dashboard/></AppLayout>
+        </ProtectedRoute>
+      }/>
+    </Routes>
   )
 }
 

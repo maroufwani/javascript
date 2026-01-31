@@ -4,39 +4,49 @@ const jwt = require('jsonwebtoken')
 
 const authController = {
     login: async (req,res)=>{
-        
-    const {email,password} = req.body;
-    if(!email || !password){
-        return res.status(400).json({
-            message: "Please enter email and password"
-        })
-    }
+        try {
+            const {email,password} = req.body;
+            if(!email || !password){
+                return res.status(400).json({
+                    message: "Please enter email and password"
+                })
+            }
 
-    const user = await userDao.findByEmail(email);
-    const isMatch = await bcrypt.compare(password,user.password)
-    if (user && isMatch){
-        const token = jwt.sign({
-            name:user.name,
-            email: user.email,
-            id: user._id
-        }, process.env.JWT_SECRET, {expiresIn: '1h'});
-        res.cookie('jwtTOken', token, {
-            httpOnly: true,
-            secure: true,
-            domain: 'localhost',
-            path: '/'
-        });
-        res.status(200).json({
-            message: `Welcome back, ${user.name}`,
-            user: user
-        });
-    }
-    else{
-        return res.status(400).json({
-            message: "Invalid email or password"
-        })
-    }
-
+            const user = await userDao.findByEmail(email);
+            if (!user) {
+                return res.status(400).json({
+                    message: "Invalid email or password"
+                })
+            }
+            const isMatch = await bcrypt.compare(password,user.password)
+            if (isMatch){
+                const token = jwt.sign({
+                    name:user.name,
+                    email: user.email,
+                    id: user._id
+                }, process.env.JWT_SECRET, {expiresIn: '1h'});
+                res.cookie('jwtToken', token, {
+                    httpOnly: true,
+                    secure: true,
+                    domain: 'localhost',
+                    path: '/'
+                });
+                res.status(200).json({
+                    message: `Welcome back, ${user.name}`,
+                    user: user
+                });
+            }
+            else{
+                return res.status(400).json({
+                    message: "Invalid email or password"
+                })
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            return res.status(500).json({
+                message: "Internal server error"
+            })
+        }
     },
     register: async (req,res)=>{
         
@@ -69,6 +79,21 @@ const authController = {
             }
             return res.status(500).json({ message: 'Internal server error' });
         }
+    },
+    verify: (req, res) => {
+        res.status(200).json({
+            message: "Verified",
+            user: req.user
+        });
+    },
+    logout: (req, res) => {
+        res.clearCookie('jwtToken', {
+            httpOnly: true,
+            secure: true,
+            domain: 'localhost',
+            path: '/'
+        });
+        res.status(200).json({ message: 'Logged out successfully' });
     }
 };
 
