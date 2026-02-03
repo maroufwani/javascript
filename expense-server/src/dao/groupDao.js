@@ -17,11 +17,15 @@ const groupDao = {
         }, { new: true });
     },
     removeMembers: async (...membersEmail) => {
+        return await Group.updateMany({}, {
+            $pull: { membersEmail: { $in: membersEmail } }
+        }, { new: true });
     },
     getGroupByEmail: async (email) => {
         return await Group.find({ membersEmail: email });
     },
     getGroupByStatus: async (status) => {
+        return await Group.find({ paymentStatus: status });
     },
     /**
     * We'll only return when was the last time group

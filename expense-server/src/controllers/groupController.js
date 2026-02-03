@@ -31,6 +31,84 @@ const groupController = {
                 message: "Internal Server Error"
             });
         }
+    },
+    update: async (req,res)=>{
+        try {
+            const { groupId, name, description, thumbnail, adminEmail, paymentStatus } = req.body;
+            const updatedGroup = await groupDao.updateGroup({
+                groupId, name, description, thumbnail, adminEmail, paymentStatus
+            });
+            res.status(200).json({
+                message: 'Group updated',
+                group: updatedGroup
+            });
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({
+                message: "Internal Server Error"
+            });
+        }
+    },
+    addMembers: async (req,res)=>{
+        try {
+            const { groupId, membersEmails } = req.body;
+            const updatedGroup = await groupDao.addMembers(groupId, ...membersEmails);
+            res.status(200).json({
+                message: 'Members added',
+                group: updatedGroup
+            });
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({
+                message: "Internal Server Error"
+            });
+        }
+    },
+    removeMembers: async (req,res)=>{
+        try {
+            const { membersEmails } = req.body;
+            const updatedGroup = await groupDao.removeMembers(...membersEmails);
+            res.status(200).json({
+                message: 'Members removed',
+                group: updatedGroup
+            });
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({
+                message: "Internal Server Error"
+            });
+        }
+    },
+    getGroupsByEmail: async (req,res)=>{
+        try {
+            const user = req.user;
+            const groups = await groupDao.getGroupByEmail(user.email);
+            res.status(200).json({
+                message: 'Groups fetched',
+                groups: groups
+            });
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({
+                message: "Internal Server Error"
+            });
+        }
+    },
+    getGroupsByStatus: async (req,res)=>{
+        try {
+            const { status } = req.params;
+            const groups = await groupDao.getGroupByStatus(status);
+            res.status(200).json({
+                message: 'Groups fetched',
+                groups: groups
+            });
+        }
+        catch (err) {
+            console.log(err);
+            res.status(500).json({
+                message: "Internal Server Error"
+            });
+        }
     }
 }
 
