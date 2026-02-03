@@ -1,48 +1,55 @@
-// // import Student from "./pages/examples/Student"
-// // import StudentList from "./pages/examples/StudentList"
-// import Student4 from "./pages/examples/Student4"
-// function App() {
-//   const students=[{name:'atiya',rollNumber:10,percentage:99},{name:'atiya2',rollNumber:10,percentage:99}]
-//   return (
-//     <>
-//     <h1>Welcome to expense app</h1>
-//     {/* <Student name="Hello" rollNumber="10" percentage={10}/>
-//     <StudentList students={students}/> */}
-//     <Student4 studentList={students}/>
-//     </>
-//   )
-// }
+import { Route, Routes, Navigate, useNavigate,useLocation } from "react-router-dom";
+import axios from "axios";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
+import Logout from "./pages/Logout";
+import UserLayout from "./components/UserLayout";
+import AppLayout from "./components/AppLayout";
+import Reset from "./pages/Reset";
 
-// import Navbar from "./components/Navbar"
-// import Form from "./components/Form"
-
-
-
-
-
-
-
-import { Route, Routes } from "react-router-dom"
-import Home from "./pages/Home"
-import Login from "./pages/Login"
-import Signup from "./pages/Signup"
-import Dashboard from "./pages/Dashboard"
-import AppLayout from "./components/AppLayout"
-import ProtectedRoute from "./components/ProtectedRoute"
+import { useEffect, useState } from "react";
 
 function App() {
-  return (
+  const [userDetails, setUserDetails] = useState(null);
+ const isUserLoggedIn = async () => {
+ try {
+const response = await axios.post('http://localhost:5001/auth/is-user-logged-in',
+ {}, { withCredentials: true });
+
+ setUserDetails(response.data.user);
+ } catch (error) {
+ console.log(error);
+ }
+ };
+
+ useEffect(() => {
+ isUserLoggedIn();
+ }, []);
+
+ return (
     <Routes>
-      <Route path="/" element={<AppLayout><Home/></AppLayout>}/>
-      <Route path="/signup" element={<AppLayout><Signup/></AppLayout>}/>
-      <Route path="/login" element={<AppLayout><Login/></AppLayout>}/>
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <AppLayout><Dashboard/></AppLayout>
-        </ProtectedRoute>
-      }/>
+      <Route path="/" element={userDetails ?
+        (<Navigate to="/dashboard" />) :
+        (<AppLayout><Home /></AppLayout>)}/>
+      <Route path="/signup" element={(userDetails ?
+        (<Navigate to="/dashboard" />) :
+        (<AppLayout><Signup/></AppLayout>))}/>
+      <Route path="/login" element={(userDetails ?
+        (<Navigate to="/dashboard" />) :
+        (<AppLayout><Login setUser={setUserDetails} /></AppLayout>))}/>
+      <Route path="/dashboard" element={userDetails ? 
+        (<UserLayout><Dashboard user={userDetails} /></UserLayout>) : 
+        (<Navigate to="/login" />)}/>
+      <Route path="/logout" element={userDetails ? 
+        (<Logout setUser={setUserDetails}/>) :
+        (<Navigate to="/login" />)}/>
+      <Route path="/reset" element={(userDetails ?
+        (<Navigate to="/dashboard" />) :
+      (<AppLayout><Reset/></AppLayout>))}/>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
